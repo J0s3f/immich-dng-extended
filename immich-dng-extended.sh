@@ -211,6 +211,11 @@ EOF
   eula_mark_accepted
 }
 
+# Records a -y/--yes (or IMMICH_DNG_ASSUME_YES=1) acceptance immediately, so
+# even no-op runs (libs already current, no build) persist it for later
+# unattended rebuilds. Interactive runs persist via confirm_eula instead.
+record_assumed_eula() { if [ "$ASSUME_YES" = 1 ]; then eula_mark_accepted; fi }
+
 # Automation entry points must never block on a prompt (cron has no TTY).
 # Pass-through when acceptance was recorded earlier, hard fail otherwise.
 require_eula_noninteractive() {
@@ -661,6 +666,7 @@ rollback() {
 
 cmd_apply() {
   with_lock_or_exit
+  record_assumed_eula
   detect_compose
   detect_immich
   if libs_current; then
@@ -713,6 +719,7 @@ notify() {
 #             3 = another run in progress.
 cmd_ensure() {
   with_lock_or_exit
+  record_assumed_eula
   detect_compose
   detect_immich
   if libs_current; then
@@ -742,6 +749,7 @@ cmd_update() {
   local was_auto=0
   [ "${AUTO:-0}" = 1 ] && was_auto=1
   with_lock_or_exit
+  record_assumed_eula
   detect_compose
   if [ "$was_auto" = 1 ]; then
     require_eula_noninteractive

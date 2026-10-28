@@ -50,6 +50,21 @@ fi
 LIBDNG_REVISION="2573_20260512"
 
 # 3. Automation gate: missing acceptance exits 2, never prompts.
+# 3b. -y on a no-op run still records acceptance (the unattended-update case).
+rm -f "$EULA_ACCEPT_FILE" "$EULA_ACCEPT_XDG"
+ASSUME_YES=0
+record_assumed_eula
+if eula_accepted; then
+  printf 'FAIL: plain run must not record acceptance\n' >&2
+  exit 1
+fi
+ASSUME_YES=1
+record_assumed_eula
+ASSUME_YES=0
+if ! eula_accepted; then
+  printf 'FAIL: -y no-op run should persist acceptance\n' >&2
+  exit 1
+fi
 rm -f "$EULA_ACCEPT_FILE" "$EULA_ACCEPT_XDG"
 if ( require_eula_noninteractive ) 2>/dev/null; then
   printf 'FAIL: require_eula_noninteractive should fail when unaccepted\n' >&2
